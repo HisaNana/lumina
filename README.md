@@ -1,101 +1,130 @@
-# AI Lookup — Chrome Extension
+# ✦ Lumina — 哪里不会点哪里
 
-A lightweight Chrome extension that lets you select any text on a webpage and instantly get AI-powered explanations, translations, summaries, or code analysis in a floating window — without leaving the page.
+> 一个 Chrome 浏览器插件，让你在任何网页上选中文字，就能立刻获得 AI 解释、翻译、总结或代码分析，悬浮窗口不打断阅读，思路永远在线。
 
-![demo](assets/demo.png)
+---
 
-## Features
+## 为什么需要 Lumina？
 
-- **Select & Ask** — Highlight any word or sentence; a floating toolbar appears instantly
-- **4 Built-in Actions**
-  - 🔍 **Explain** — Academic or technical term explanations
-  - 🔤 **Translate** — Auto-detects language; Chinese ↔ English
-  - 📝 **Summarize** — Summarize selected text or the full page
-  - 💻 **Code** — Explain code logic and behavior
-- **Custom Actions** — Add your own prompts with custom icons and names; use `{{text}}` as a placeholder for the selected text
-- **Floating Chat Windows** — Draggable, closeable, multi-window; each window maintains its own conversation history for follow-up questions
-- **Streaming Output** — Token-by-token typewriter effect via SSE
-- **Markdown Rendering** — Responses render with headings, bold, code blocks, lists, etc.
-- **OpenAI-Compatible** — Works with OpenAI, local Ollama, or any OpenAI-compatible proxy
-- **Privacy-First** — Your API key is stored locally in `chrome.storage`; no data passes through any intermediary server
+在和 ChatGPT 聊天时，回答里出现了「贝叶斯推断」——你不懂，但要去新标签页搜索，就得放弃当前阅读位置，等看完解释回来，思路已经断了。
 
-## Installation
+**Lumina 解决的就是这个问题。**
 
-This extension is not published to the Chrome Web Store. Load it locally in developer mode.
+选中词语 → 点击 → 悬浮窗里 AI 实时解释 → 可以继续追问 → 窗口一直悬浮在页面上，随时关闭。原页面完全不动。
 
-**Requirements:** Chrome 88+ (Manifest V3 support)
+---
 
-1. Clone or download this repository:
+## 功能一览
+
+- **选中即触发** — 鼠标选中任意文字，工具栏自动出现在选区下方
+- **4 个内置动作**
+  - 🔍 **解释** — 术语、概念、缩写，清晰解读
+  - 🔤 **翻译** — 自动识别语言，中英互译
+  - 📝 **总结** — 总结选中段落，或一键总结整页内容
+  - 💻 **代码解释** — 解析代码逻辑、原理与作用
+- **自定义动作** — 自己写 Prompt，自己选 emoji 图标，打造专属工具栏
+- **多窗口并存** — 同时打开多个悬浮窗，每个独立对话，互不干扰
+- **流式输出** — 打字机效果，逐字实时显示
+- **Markdown 渲染** — 标题、加粗、代码块、列表一应俱全
+- **兼容任意 API** — 支持 OpenAI、本地 Ollama、各类兼容代理
+- **隐私优先** — API Key 仅存本地，请求直连 AI 服务，无中间服务器
+
+---
+
+## 安装方式
+
+> Lumina 暂未上架 Chrome 应用商店，通过开发者模式本地加载即可使用。
+
+**系统要求：** Chrome 88 及以上版本
+x
+1. 下载或克隆本仓库：
    ```bash
-   git clone https://github.com/YOUR_USERNAME/ai-lookup-extension.git
+   git clone https://github.com/HisaNana/lumina.git
    ```
-2. Open Chrome and go to `chrome://extensions`
-3. Enable **Developer mode** (toggle in the top-right corner)
-4. Click **Load unpacked** and select the `ai-lookup-extension/` folder
-5. The extension icon will appear in your toolbar
+2. 打开 Chrome，访问 `chrome://extensions`
+3. 开启右上角的 **开发者模式**
+4. 点击 **加载已解压的扩展程序**，选择 `ai-lookup-extension/` 目录
+5. 插件图标出现在工具栏，安装完成
 
-## Configuration
+---
 
-Click the extension icon to open the settings popup:
+## 初次配置
 
-| Field | Description | Default |
-|-------|-------------|---------|
-| API Key | Your OpenAI (or compatible) API key | *(required)* |
-| Base URL | API endpoint | `https://api.openai.com/v1` |
-| Model | Model name | `gpt-4o-mini` |
-| System Prompt | AI role instruction | Academic term explainer |
+点击工具栏中的 Lumina 图标，打开设置页：
 
-**Using a proxy or local model:**
-- Ollama: set Base URL to `http://localhost:11434/v1`, Model to `llama3`
-- Any OpenAI-compatible API: just change the Base URL and model name
+| 配置项 | 说明 | 默认值 |
+|--------|------|--------|
+| API Key | OpenAI 或兼容服务的密钥 | *(必填)* |
+| Base URL | API 接口地址 | `https://api.openai.com/v1` |
+| 模型 | 模型名称 | `gpt-4o-mini` |
+| System Prompt | AI 角色设定 | 学术名词解释助手 |
 
-## Custom Actions
+**使用代理或本地模型：**
+- Ollama：Base URL 填 `http://localhost:11434/v1`，模型填 `llama3`
+- 国内代理：填入代理地址和对应模型名即可
 
-In the settings popup, scroll to **气泡按钮 (Bubble Buttons)**:
+---
 
-1. Toggle built-in actions on/off
-2. Click **＋ 添加自定义指令** to add a custom action
-3. Set an icon (emoji or text), a name, and a prompt
-4. Use `{{text}}` in the prompt to represent the selected text
-5. Drag rows to reorder; click ✕ to delete
-6. Click **保存** to save
+## 自定义动作
 
-**Example custom prompts:**
+在设置页的「气泡按钮」区域：
+
+1. 用开关控制内置功能的显示/隐藏
+2. 点击 **＋ 添加自定义指令** 新增动作
+3. 设置图标（支持 emoji 或任意文字）、名称、Prompt
+4. Prompt 中用 `{{text}}` 表示选中的文字
+5. 拖动行首 ⠿ 手柄可调整顺序，✕ 删除
+6. 点击 **保存** 生效
+
+**一些实用的自定义 Prompt 示例：**
+
 ```
-请为以下概念推荐3篇相关学术文献：{{text}}
-请用费曼技巧解释：{{text}}
-Write a Python function that implements: {{text}}
+请解答以下题目：{{text}}
+
+请为以下概念推荐 3 篇相关学术文献：{{text}}
+
+请找出以下代码可能存在的 bug 和优化点：{{text}}
+
+用一句话概括：{{text}}
 ```
 
-## Usage
+---
 
-1. Select any text on a webpage (works on ChatGPT, Claude, articles, documentation, etc.)
-2. A floating toolbar appears below the selection
-3. Click an action button — a floating chat window opens and the AI responds automatically
-4. Ask follow-up questions in the input box (Enter to send, Shift+Enter for newline)
-5. Open multiple windows simultaneously; drag them to reposition
+## 使用方法
 
-> **After reloading the extension**, refresh any open tabs before using it.
+1. 在任意网页（ChatGPT、论文、文档、代码、题库……）选中一段文字
+2. 选区下方出现工具栏
+3. 点击任意动作按钮，悬浮窗弹出，AI 自动开始回答
+4. 在输入框继续追问（**Enter** 发送，**Shift+Enter** 换行）
+5. 可同时打开多个窗口，拖动标题栏移动位置，点 ✕ 关闭
 
-## File Structure
+> 每次在 `chrome://extensions` 重新加载插件后，需要刷新当前测试页面才能生效。
+
+---
+
+## 文件结构
 
 ```
 ai-lookup-extension/
-├── manifest.json        # Extension config (Manifest V3)
-├── content_script.js    # Injected into all pages; bubble + floating windows
-├── background.js        # Service worker; bridges storage API to content script
-├── popup.html           # Settings page UI
-├── popup.js             # Settings page logic
+├── manifest.json        # 插件配置（Manifest V3）
+├── content_script.js    # 注入所有页面，负责气泡与悬浮窗
+├── background.js        # Service Worker，负责配置读取中转
+├── popup.html           # 设置页 UI
+├── popup.js             # 设置页逻辑
 ├── icon16.png
 ├── icon48.png
 └── icon128.png
 ```
 
-## Privacy
+---
 
-- Your API key is stored only in `chrome.storage.local` on your device
-- Requests go directly from your browser to your configured API endpoint
-- No analytics, no tracking, no external services beyond your AI provider
+## 隐私说明
+
+- API Key 仅保存在本地 `chrome.storage.local`，不经过任何第三方服务器
+- 所有 AI 请求从你的浏览器直接发送到你配置的 API 地址
+- 插件不收集任何使用数据，无埋点，无追踪
+
+---
 
 ## License
 
