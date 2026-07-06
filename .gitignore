@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Generated files (icons can be regenerated with gen_icons.js)
+# Uncomment below if you don't want to commit generated icons:
+# icon16.png
+# icon48.png
+# icon128.png
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment / secrets (never commit API keys)
+.env
+.env.local
+*.env
+
+# Zip packages
+*.zip
+*.crx

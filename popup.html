@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Lookup 设置</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 360px;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 13px;
+      color: #1e293b;
+      background: #f8fafc;
+    }
+    h1 { font-size: 15px; font-weight: 600; margin-bottom: 14px; color: #2563eb; }
+    h2 { font-size: 13px; font-weight: 600; margin: 18px 0 8px; color: #475569; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
+    label { display: block; margin-top: 10px; margin-bottom: 3px; font-weight: 500; color: #475569; }
+    input, textarea {
+      width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px;
+      font-size: 12px; background: #fff; color: #1e293b; outline: none; transition: border-color 0.15s;
+    }
+    input:focus, textarea:focus { border-color: #2563eb; }
+    textarea { resize: vertical; min-height: 55px; }
+    .hint { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+
+    /* 主保存按钮 */
+    #saveBtn {
+      margin-top: 14px; width: 100%; padding: 8px;
+      background: #2563eb; color: #fff; border: none; border-radius: 6px;
+      font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s;
+    }
+    #saveBtn:hover { background: #1d4ed8; }
+    #status { margin-top: 8px; text-align: center; font-size: 12px; color: #16a34a; min-height: 16px; }
+
+    /* 自定义指令列表 */
+    #actionList { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+    .action-row {
+      display: flex; align-items: flex-start; gap: 6px;
+      background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 8px;
+      cursor: grab;
+    }
+    .action-row:active { cursor: grabbing; }
+    .drag-handle { color: #94a3b8; font-size: 14px; padding-top: 2px; cursor: grab; flex-shrink: 0; }
+    .action-fields { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .action-row-top { display: flex; gap: 5px; align-items: center; }
+    .icon-input {
+      width: 44px !important; text-align: center; font-size: 15px;
+      padding: 4px 4px !important; flex-shrink: 0;
+    }
+    .label-input { flex: 1; }
+    .prompt-input { width: 100%; font-size: 11px; min-height: 40px; }
+    .del-btn {
+      background: none; border: none; color: #94a3b8; font-size: 16px; cursor: pointer;
+      padding: 0 2px; flex-shrink: 0; margin-top: 1px; width: auto; margin-top: 0;
+    }
+    .del-btn:hover { color: #ef4444; background: none; }
+
+    /* 新增按钮 */
+    #addAction {
+      width: 100%; padding: 6px; background: #f1f5f9; border: 1px dashed #cbd5e1;
+      border-radius: 6px; color: #64748b; font-size: 12px; cursor: pointer;
+      transition: background .15s;
+    }
+    #addAction:hover { background: #e2e8f0; }
+
+    /* 内置指令开关 */
+    .builtin-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 5px 0; border-bottom: 1px solid #f1f5f9;
+    }
+    .builtin-label { font-size: 12px; color: #475569; }
+    .toggle {
+      position: relative; width: 32px; height: 18px; flex-shrink: 0;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; inset: 0; background: #cbd5e1; border-radius: 18px; cursor: pointer; transition: .2s;
+    }
+    .slider::before {
+      content: ''; position: absolute; width: 13px; height: 13px;
+      left: 3px; top: 50%; transform: translateY(-50%);
+      background: #fff; border-radius: 50%; transition: .2s;
+    }
+    .toggle input:checked + .slider { background: #2563eb; }
+    .toggle input:checked + .slider::before { transform: translateY(-50%) translateX(13px); }
+  </style>
+</head>
+<body>
+  <h1>AI Lookup 设置</h1>
+
+  <label for="apiKey">API Key <span style="color:#ef4444">*</span></label>
+  <input type="password" id="apiKey" placeholder="sk-..." />
+
+  <label for="baseUrl">Base URL</label>
+  <input type="text" id="baseUrl" placeholder="https://api.openai.com/v1" />
+  <p class="hint">兼容 OpenAI 协议均可（Ollama、代理等）</p>
+
+  <label for="model">模型</label>
+  <input type="text" id="model" placeholder="gpt-4o-mini" />
+
+  <label for="systemPrompt">System Prompt</label>
+  <textarea id="systemPrompt"></textarea>
+
+  <h2>气泡按钮</h2>
+
+  <p style="font-size:11px;color:#64748b;margin-bottom:8px">
+    开关内置功能，或添加自定义指令。<br>
+    图标支持 emoji 或任意文字；Prompt 中用 <code style="background:#e2e8f0;padding:0 3px;border-radius:3px">{{text}}</code> 代表选中的文字。
+  </p>
+
+  <!-- 内置功能开关 -->
+  <div id="builtinToggles"></div>
+
+  <!-- 自定义指令列表 -->
+  <div id="actionList"></div>
+  <button id="addAction">＋ 添加自定义指令</button>
+
+  <button id="saveBtn" style="margin-top:16px">保存</button>
+  <div id="status"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
