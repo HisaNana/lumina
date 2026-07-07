@@ -36,7 +36,7 @@
 > Lumina 暂未上架 Chrome 应用商店，通过开发者模式本地加载即可使用。
 
 **系统要求：** Chrome 88 及以上版本
-x
+
 1. 下载或克隆本仓库：
    ```bash
    git clone https://github.com/HisaNana/lumina.git
@@ -123,6 +123,20 @@ ai-lookup-extension/
 - API Key 仅保存在本地 `chrome.storage.local`，不经过任何第三方服务器
 - 所有 AI 请求从你的浏览器直接发送到你配置的 API 地址
 - 插件不收集任何使用数据，无埋点，无追踪
+
+---
+
+## 更新日志
+
+### 2026-07-07
+
+**架构优化：AI 请求迁移至 Background Service Worker**
+
+将所有 AI fetch 请求从 content_script 迁移到 background service worker 执行，解决了在部分网站（阿里云控制台、企业内部管理后台等）因页面 CSP 策略拦截导致 `Failed to fetch` 的问题。
+
+- `background.js` 新增 `AI_STREAM` 消息处理，在扩展上下文发起请求，完全绕过页面 CSP 限制
+- 流式 token 通过 `chrome.tabs.sendMessage` 逐块推回 content_script
+- 每次请求携带唯一 `requestId`，多窗口并发时不会串流
 
 ---
 

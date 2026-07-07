@@ -348,60 +348,47 @@
         }
 
         setDiag('正在请求 API…');
-        const url = cfg.baseUrl.replace(/\/$/, '') + '/chat/completions';
         const messages = [{ role: 'system', content: cfg.systemPrompt }, ...history];
-        log('fetch:', url, '模型:', cfg.model);
+        log('通过 background 发起请求, 模型:', cfg.model);
 
-        let resp;
-        try {
-          resp = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.apiKey },
-            body: JSON.stringify({ model: cfg.model, messages, stream: true })
+        // 生成唯一 requestId，避免多窗口并发时串流
+        const requestId = Math.random().toString(36).slice(2);
+
+        // 向 background 发起流式请求
+        await new Promise((resolve, reject) => {
+          setDiag('流式接收中…');
+          out.textContent = '';
+          let fullText = '';
+
+          // 监听 background 推回来的 chunk
+          const onChunk = (msg) => {
+            if (msg.type !== 'AI_CHUNK' || msg.requestId !== requestId) return;
+            if (msg.error) {
+              chrome.runtime.onMessage.removeListener(onChunk);
+              reject(new Error(msg.error));
+            } else if (msg.token) {
+              fullText += msg.token;
+              out.textContent = fullText;
+              msgs.scrollTop = msgs.scrollHeight;
+            } else if (msg.done) {
+              chrome.runtime.onMessage.removeListener(onChunk);
+              out.innerHTML = renderMd(fullText);
+              out.classList.remove('cur');
+              history.push({ role: 'assistant', content: fullText });
+              setDiag('完成');
+              resolve();
+            }
+          };
+          chrome.runtime.onMessage.addListener(onChunk);
+
+          // 发送请求给 background
+          chrome.runtime.sendMessage({ type: 'AI_STREAM', requestId, cfg, messages }, resp => {
+            if (chrome.runtime.lastError || !resp?.ok) {
+              chrome.runtime.onMessage.removeListener(onChunk);
+              reject(new Error(chrome.runtime.lastError?.message || resp?.error || '请求发送失败'));
+            }
           });
-        } catch (e) {
-          throw new Error('网络请求失败: ' + e.message);
-        }
-
-        if (!resp.ok) {
-          let detail = '';
-          try { detail = (await resp.json()).error?.message || ''; } catch (_) {}
-          throw new Error(`API ${resp.status}${detail ? ': ' + detail : ''}`);
-        }
-
-        setDiag('流式接收中…');
-        out.textContent = '';
-        const reader = resp.body.getReader();
-        const dec = new TextDecoder();
-        let buf = '', fullText = '';
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buf += dec.decode(value, { stream: true });
-          const lines = buf.split('\n');
-          buf = lines.pop();
-          for (const line of lines) {
-            const t = line.trim();
-            if (!t || t === 'data: [DONE]' || !t.startsWith('data: ')) continue;
-            try {
-              const tok = JSON.parse(t.slice(6)).choices?.[0]?.delta?.content;
-              if (tok) {
-                fullText += tok;
-                // 流式阶段用 textContent 显示打字效果，完成后再渲染 MD
-                out.textContent = fullText;
-                msgs.scrollTop = msgs.scrollHeight;
-              }
-            } catch (_) {}
-          }
-        }
-
-        // 流式完成：将累积文本渲染为 Markdown HTML
-        out.innerHTML = renderMd(fullText);
-
-        out.classList.remove('cur');
-        history.push({ role: 'assistant', content: fullText });
-        setDiag('完成');
+        });
 
       } catch (e) {
         out.classList.remove('cur');
